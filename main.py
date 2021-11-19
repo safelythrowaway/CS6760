@@ -1,17 +1,20 @@
 # This is the Main script for my project
 
 import Bio
+import pydna.design
 from Bio.Restriction import *
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio import SeqIO
 import re
-import pydna
-import requests
 
 
-# This section is for aquiring inputs.  I haven't been able to make this work yet, Talk to Cory about it.
+from pydna.dseqrecord import Dseqrecord
+from pydna import amplify
+from pydna import design
 
+# import requests
+#
 # response = requests.post(
 #     'http://synbiohub.org/login',
 #     headers={
@@ -49,27 +52,15 @@ import requests
 #         'X-authorization': response.raw
 #         },
 # )
-#
+
 # print(response.status_code)
 # print(response.content)
 
 
 Plasmid = SeqIO.read('LacI_Promotor_Plasmid.fasta', "fasta")
 seqOfInterest =SeqRecord(Seq('aattcgcggccgctt'))
-
-# This function is for checking the registry part for restriction sites EcoRI, SpeI, XbaI
-
-def CheckForSites(enzyme1, enzyme2, enzyme3, seq):
-    zymes=[enzyme1.site, enzyme2.site, enzyme3.site]
-    matches = [x in seq for x in zymes]
-        return matches
-
-
-
-
-
-
-
+Seq(Plasmid)
+dir(Plasmid)
 # test = Restriction.AllEnzymes.search(Plasmid.seq)
 # test = RestrictionBatch([EcoRI, XbaI]).search(Plasmid.seq)
 # test = Analysis(RestrictionBatch([EcoRI, XbaI]),Plasmid.seq, linear=False)
@@ -78,6 +69,43 @@ def CheckForSites(enzyme1, enzyme2, enzyme3, seq):
 #
 # test = RestrictionBatch([EcoRI, XbaI]).catalyze(Plasmid.seq)
 
+#########################################################################################################
+### primer design section
+#########################################################################################################
+def CheckPrimerForRes(enzyme1, enzyme2, dnaInsert):
+    Sites = [x for x in [enzyme1, enzyme2] if len(x.search(dnaInsert.seq))>0]
+    if not Sites:
+        print('No interfearing restriction sites found in Sequence')
+    else:
+        print(f'{Sites} found in Sequence')
+    return Sites
+
+def MakePrimers(enzyme1, enzyme2, dnaInsert):
+    if len(dnaInsert) > 30:
+        dna = pydna.dseqrecord.Dseqrecord(str(dnaInsert.seq))
+        primerObj = pydna.design.primer_design(dnaInsert)
+        primerF = enzyme1.site + str(primerObj.forward_primer.seq)
+        primerR = str(primerObj.forward_primer.seq) + enzyme2.site.reverse_complement
+    elif len(dnaInsert) > 17:
+        print("Sequence of Interest Length is less than 30 bp and purifying by gel might be difficult")
+        primerLen = len(dnaInsert)
+        primerF = enzyme1.site+dnaInsert[0:17]
+        primerR = dnaInsert[(primerLen-17):primerlen] + enzyme2.site
+    else:
+        print('Sequence of Interest Length is less than 17bp, the Primers may not work.  '
+              'Additionally, purifying by gel may be difficult.')
+        primerF = enzyme1.site + dnaInsert.seq[:]
+        primerR = dnaInsert.seq[:] + enzyme2.site
+    return(primerF, primerR)
+
+
+def PrimerPCR():
+
+#########################################################################################################
+
+
+
+#########################################################################################################
 def Digest(enzyme1, enzyme2, inPlasmid): #do not quote the enzyme names.
     cut1 = enzyme1.catalyse(inPlasmid, linear = False)
     if len(cut1)>1:
