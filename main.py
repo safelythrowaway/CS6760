@@ -13,6 +13,15 @@ from pydna.dseqrecord import Dseqrecord
 from pydna import amplify
 from pydna import design
 
+import json, xmltodict
+
+with open('iGEM_2019_Plate1_Well10A.xml', 'r') as myfile:
+    obj = xmltodict.parse(myfile.read())
+print(json.dumps(obj))
+
+
+
+
 # import requests
 #
 # response = requests.post(
@@ -60,14 +69,6 @@ from pydna import design
 Plasmid = SeqIO.read('LacI_Promotor_Plasmid.fasta', "fasta")
 seqOfInterest =SeqRecord(Seq('aattcgcggccgctt'))
 Seq(Plasmid)
-dir(Plasmid)
-# test = Restriction.AllEnzymes.search(Plasmid.seq)
-# test = RestrictionBatch([EcoRI, XbaI]).search(Plasmid.seq)
-# test = Analysis(RestrictionBatch([EcoRI, XbaI]),Plasmid.seq, linear=False)
-# test.print_as('number')
-# test.print_that()
-#
-# test = RestrictionBatch([EcoRI, XbaI]).catalyze(Plasmid.seq)
 
 #########################################################################################################
 ### primer design section
@@ -99,7 +100,8 @@ def MakePrimers(enzyme1, enzyme2, dnaInsert):
     return(primerF, primerR)
 
 
-def PrimerPCR():
+def PrimerPCR(primer1, primer2, template):
+    pydna.amplify.pcr()
 
 #########################################################################################################
 
