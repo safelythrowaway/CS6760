@@ -1,4 +1,4 @@
-# This is the Main script for my project
+# This is the main script for my project
 
 import Bio
 import pydna.design
@@ -6,75 +6,40 @@ from Bio.Restriction import *
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio import SeqIO
-import re
-
-
+from pydna.gel import gel
+from pydna.ladders import PennStateLadder
 from pydna.dseqrecord import Dseqrecord
 from pydna import amplify
 from pydna import design
-
-import json, xmltodict
-
-with open('iGEM_2019_Plate1_Well10A.xml', 'r') as myfile:
-    obj = xmltodict.parse(myfile.read())
-print(json.dumps(obj))
-
+import re
+import requests
+from PIL import Image
+from pydna.gel import gel
+from pydna.ladders import PennStateLadder
 
 
 
-# import requests
-#
-# response = requests.post(
-#     'http://synbiohub.org/login',
-#     headers={
-#         'X-authorization': '<token>',
-#         'Accept': 'text/plain'
-#     },
-#     data={
-#         'email': 'josh.jackson@hsc.utah.edu',
-#         'password' : 'jjackson',
-#         },
-# )
-#
-# print(response.status_code)
-# print(response.content)
-#
-#
-# response = requests.get(
-#     'http://synbiohub.org/profile',
-#     headers={
-#     'X-authorization': '<token>',
-#     'Accept': 'text/plain'
-#     }
-# )
-#
-# print(response.status_code)
-# print(response.content)
-#
-#
-# import requests
-#
-# sequence = requests.get(
-#     'BBa_K576005/sbol',
-#     headers={
-#         'Accept': 'text/plain',
-#         'X-authorization': response.raw
-#         },
-# )
+##############################################################################################################
+## Get sequences from synbiohub
+##############################################################################################################
 
-# print(response.status_code)
-# print(response.content)
-
-
-Plasmid = SeqIO.read('LacI_Promotor_Plasmid.fasta', "fasta")
-seqOfInterest =SeqRecord(Seq('aattcgcggccgctt'))
-Seq(Plasmid)
+def GetSbolSequence(https):
+    response = requests.get(
+    str(https+'/sbol'),
+    headers={
+        'Accept': 'text/plain',
+        'X-authorization': '<token>'
+        },
+    )
+    sequence = Seq(re.findall(r'elements>(.*)</sbol:elements>', str(response.text))[0])
+    return sequence
 
 #########################################################################################################
 ### primer design section
 #########################################################################################################
+
 def CheckPrimerForRes(enzyme1, enzyme2, dnaInsert):
-    Sites = [x for x in [enzyme1, enzyme2] if len(x.search(dnaInsert.seq))>0]
+    Sites = [x for x in [enzyme1, enzyme2] if len(x.search(dnaInsert))>0]
     if not Sites:
         print('No interfearing restriction sites found in Sequence')
     else:
@@ -83,10 +48,10 @@ def CheckPrimerForRes(enzyme1, enzyme2, dnaInsert):
 
 def MakePrimers(enzyme1, enzyme2, dnaInsert):
     if len(dnaInsert) > 30:
-        dna = pydna.dseqrecord.Dseqrecord(str(dnaInsert.seq))
-        primerObj = pydna.design.primer_design(dnaInsert)
+        dna = pydna.dseqrecord.Dseqrecord(str(dnaInsert))
+        primerObj = pydna.design.primer_design(dna)
         primerF = enzyme1.site + str(primerObj.forward_primer.seq)
-        primerR = str(primerObj.forward_primer.seq) + enzyme2.site.reverse_complement
+        primerR = Seq(str(primerObj.reverse_primer.seq) + str(Seq(enzyme2.site).reverse_complement()))
     elif len(dnaInsert) > 17:
         print("Sequence of Interest Length is less than 30 bp and purifying by gel might be difficult")
         primerLen = len(dnaInsert)
@@ -95,18 +60,28 @@ def MakePrimers(enzyme1, enzyme2, dnaInsert):
     else:
         print('Sequence of Interest Length is less than 17bp, the Primers may not work.  '
               'Additionally, purifying by gel may be difficult.')
-        primerF = enzyme1.site + dnaInsert.seq[:]
+        primerF = enzyme1.site + dnaInsert[:]
         primerR = dnaInsert.seq[:] + enzyme2.site
     return(primerF, primerR)
 
 
-def PrimerPCR(primer1, primer2, template):
-    pydna.amplify.pcr()
+def InsertPCR(primer1, primer2, template):
+    pydna.amplify.pcr(primer1, primer2, template)
+
+
+def FakePCR(primer1, primer2, template):
+    completeSeq= primer1 + template + primer2
+    return completeSeq
 
 #########################################################################################################
+## Visualize Products
+#########################################################################################################
 
+def GelImageShow(*target):
+    gel([PennStateLadder, [Dseqrecord(target)]]).show()
 
-
+#########################################################################################################
+## Assemble with Plasmid
 #########################################################################################################
 def Digest(enzyme1, enzyme2, inPlasmid): #do not quote the enzyme names.
     cut1 = enzyme1.catalyse(inPlasmid, linear = False)
@@ -130,4 +105,6 @@ def
 # % symbol will compare ends and return true if ligation is possible.
 
 
-matching = [x for x in test if 'aattcgcgg' in x ]
+
+
+
