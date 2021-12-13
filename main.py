@@ -21,7 +21,6 @@ from pydna.ladders import PennStateLadder
 
 ##############################################################################################################
 ## Get sequences from synbiohub
-##############################################################################################################
 
 def GetSbolSequence(https):
     response = requests.get(
@@ -36,7 +35,6 @@ def GetSbolSequence(https):
 
 #########################################################################################################
 ### primer design section
-#########################################################################################################
 
 def CheckPrimerForRes(enzyme1, enzyme2, dnaInsert):
     Sites = [x for x in [enzyme1, enzyme2] if len(x.search(dnaInsert))>0]
@@ -75,32 +73,32 @@ def FakePCR(primer1, primer2, template):
 
 #########################################################################################################
 ## Visualize Products
-#########################################################################################################
 
-def GelImageShow(*target):
+def GelImageShow(target):
     gel([PennStateLadder, [Dseqrecord(target)]]).show()
 
 #########################################################################################################
 ## Assemble with Plasmid
-#########################################################################################################
+
 def Digest(enzyme1, enzyme2, inPlasmid): #do not quote the enzyme names.
-    cut1 = enzyme1.catalyse(inPlasmid, linear = False)
+    cut1 = enzyme1.catalyse(inPlasmid, linear=False)
     if len(cut1)>1:
         print(enzyme1 +' has more than one cutsite in plasmid')
         exit
     cut1 = cut1[0]
     cut2 = enzyme2.catalyse(cut1, linear = True)
     #need to figure out how to pick the correct sequence from the two that come out.
+    re.search("^%s" % enzyme1.site, cut2)
     return cut2
 
-
-def singleCutSite():
-
-def getOverhang():
-
-def combineSequeces():
-
-def
+#len(Dseqrecord(Plasmid).cut(EcoRI))
+# def singleCutSite():
+#
+# def getOverhang():
+#
+# def combineSequeces():
+#
+# def
 
 # % symbol will compare ends and return true if ligation is possible.
 
