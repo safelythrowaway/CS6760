@@ -16,6 +16,7 @@ import requests
 from PIL import Image
 from pydna.gel import gel
 from pydna.ladders import PennStateLadder
+from Bio.SeqUtils import MeltingTemp as mt
 
 
 
@@ -49,27 +50,36 @@ def MakePrimers(enzyme1, enzyme2, dnaInsert):
         dna = pydna.dseqrecord.Dseqrecord(str(dnaInsert))
         primerObj = pydna.design.primer_design(dna)
         primerF = enzyme1.site + str(primerObj.forward_primer.seq)
-        primerR = Seq(str(primerObj.reverse_primer.seq) + str(Seq(enzyme2.site).reverse_complement()))
+        primerR = str(Seq(str(primerObj.reverse_primer.seq) + str(Seq(enzyme2.site).reverse_complement())))
+        TMF = mt.Tm_NN(primerF)
+        TMR = mt.Tm_NN(primerR)
+        TM = min(TMR, TMF)
     elif len(dnaInsert) > 17:
         print("Sequence of Interest Length is less than 30 bp and purifying by gel might be difficult")
         primerLen = len(dnaInsert)
         primerF = enzyme1.site+dnaInsert[0:17]
-        primerR = dnaInsert[(primerLen-17):primerlen] + enzyme2.site
+        primerR = str(Seq(dnaInsert[(primerLen-17):primerlen] + enzyme2.site).reverse_complement())
+        TMF = mt.Tm_NN(primerF)
+        TMR = mt.Tm_NN(primerR)
+        TM = min(TMR, TMF)
     else:
         print('Sequence of Interest Length is less than 17bp, the Primers may not work.  '
               'Additionally, purifying by gel may be difficult.')
         primerF = enzyme1.site + dnaInsert[:]
-        primerR = dnaInsert.seq[:] + enzyme2.site
-    return(primerF, primerR)
+        primerR = str(Seq(dnaInsert.seq[:] + enzyme2.site).reverse_complement())
+        TMF = mt.Tm_NN(primerF)
+        TMR = mt.Tm_NN(primerR)
+        TM = min(TMR, TMF)
+    return(primerF, primerR, TM)
 
 
 def InsertPCR(primer1, primer2, template):
     pydna.amplify.pcr(primer1, primer2, template)
 
 
-def FakePCR(primer1, primer2, template):
-    completeSeq= primer1 + template + primer2
-    return completeSeq
+def FakePCR(enzyme1, enzyme2, template):
+    completeSeq= enzyme1.site + template + Seq(enzyme2.site).reverse_complement()
+    return (completeSeq, len(completeSeq))
 
 #########################################################################################################
 ## Visualize Products
@@ -88,8 +98,8 @@ def Digest(enzyme1, enzyme2, inPlasmid): #do not quote the enzyme names.
     cut1 = cut1[0]
     cut2 = enzyme2.catalyse(cut1, linear = True)
     #need to figure out how to pick the correct sequence from the two that come out.
-    re.search("^%s" % enzyme1.site, cut2)
-    return cut2
+    cut3 = re.search("^%s" % enzyme1.ovhgseq, str(cut2).upper())
+    return cut3
 
 #len(Dseqrecord(Plasmid).cut(EcoRI))
 # def singleCutSite():
@@ -105,4 +115,6 @@ def Digest(enzyme1, enzyme2, inPlasmid): #do not quote the enzyme names.
 
 
 
-
+# for seq in test.cut(EcoRI, SpeI):
+#     print(seq)
+#     #re.search(EcoRI.ovhgseq, seq)

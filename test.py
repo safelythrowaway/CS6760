@@ -3,8 +3,8 @@ PlasmidHttp = 'https://synbiohub.org/public/igem/BBa_J61031/1'
 
 sequence = GetSbolSequence(Insert1Http)
 CheckPrimerForRes(EcoRI, SpeI, sequence)
-primerF, primerR = MakePrimers(EcoRI, SpeI, sequence)
-AmpSeq = FakePCR(primerF, primerR, sequence)
+primerF, primerR, TM = MakePrimers(EcoRI, SpeI, sequence)
+AmpSeq = FakePCR(EcoRI, SpeI, sequence)
 GelImageShow(AmpSeq)
 
 
