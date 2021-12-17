@@ -128,8 +128,8 @@ def Ligate(PlasmidDigest, InsertDigest):
     Cassette = (PlasmidDigest+InsertDigest).looped()
     return Cassette
 
-def FirstExpressionVectorOutput(Insert1Http, PlasmidHttP):
-    sequence = GetSbolSequence(Insert1Http)
+def FirstExpressionVectorOutput(InsertHttp, PlasmidHttp):
+    sequence = GetSbolSequence(InsertHttp)
     CheckInsertForRes(EcoRI, SpeI, sequence)
     primerF, primerR, TM = MakePrimers(EcoRI, SpeI, sequence)
     AmpSeq = FakePCR(EcoRI, SpeI, sequence)
@@ -147,4 +147,4 @@ def FirstExpressionVectorOutput(Insert1Http, PlasmidHttP):
             'Expression Vector Resistance':[str(resistance)],
             'Ligated Sequence':[str(ExpressionVector)]}
     df = pd.DataFrame.from_dict(data)
-    df.to_excel('Test.xlsx')
+    df.to_excel('Expression_Vector.xlsx')
