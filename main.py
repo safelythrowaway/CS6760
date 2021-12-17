@@ -17,6 +17,7 @@ from PIL import Image
 from pydna.gel import gel
 from pydna.ladders import PennStateLadder
 from Bio.SeqUtils import MeltingTemp as mt
+import pandas as pd
 
 
 
@@ -125,3 +126,25 @@ def DigestInsert(enzyme1, enzyme2, Insert):
 
 def Ligate(PlasmidDigest, InsertDigest):
     Cassette = (PlasmidDigest+InsertDigest).looped()
+    return Cassette
+
+def FirstExpressionVectorOutput(Insert1Http, PlasmidHttP):
+    sequence = GetSbolSequence(Insert1Http)
+    CheckInsertForRes(EcoRI, SpeI, sequence)
+    primerF, primerR, TM = MakePrimers(EcoRI, SpeI, sequence)
+    AmpSeq = FakePCR(EcoRI, SpeI, sequence)
+    GelImage = GelImageShow(AmpSeq)
+    Plasmid, resistance = GetSbolSequence(PlasmidHttp)
+    CheckPlasmidForRes(EcoRI, XbaI, Plasmid)
+    DigestedPlasmid = DigestPlasmid(EcoRI, XbaI, Plasmid)
+    DigestedInsert = DigestInsert(EcoRI, SpeI, AmpSeq)
+    ExpressionVector = Ligate(DigestedPlasmid, DigestedInsert)
+    data = {'Insert Sequence': [str(sequence)],
+            'Forward Primer':[str(primerF)],
+            'Reverse Primer':[str(primerR)],
+            'Anneal Temp':[str(TM)],
+            'Gel Image':[GelImage],
+            'Expression Vector Resistance':[str(resistance)],
+            'Ligated Sequence':[str(ExpressionVector)]}
+    df = pd.DataFrame.from_dict(data)
+    df.to_excel('Test.xlsx')
