@@ -1,19 +1,12 @@
 # This is the main script for my project
 
-import Bio
 import pydna.design
 from Bio.Restriction import *
-from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
-from Bio import SeqIO
-from pydna.gel import gel
-from pydna.ladders import PennStateLadder
 from pydna.dseqrecord import Dseqrecord
 from pydna import amplify
-from pydna import design
 import re
 import requests
-from PIL import Image
 from pydna.gel import gel
 from pydna.ladders import PennStateLadder
 from Bio.SeqUtils import MeltingTemp as mt
